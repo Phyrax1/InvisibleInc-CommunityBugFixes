@@ -75,14 +75,10 @@ local function init(modApi)
             })
     modApi:addGenerationOption(
             "initfacing", STRINGS.COMMBUGFIX.OPTIONS.INIT_FACING,
-            STRINGS.COMMBUGFIX.OPTIONS.INIT_FACING_TIP, {
-                noUpdate = true,
-            })
+            STRINGS.COMMBUGFIX.OPTIONS.INIT_FACING_TIP, {noUpdate = true})
     modApi:addGenerationOption(
             "observefromall", STRINGS.COMMBUGFIX.OPTIONS.OBSERVE_FROM_ALL,
-            STRINGS.COMMBUGFIX.OPTIONS.OBSERVE_FROM_ALL_TIP, {
-                noUpdate = true,
-            })
+            STRINGS.COMMBUGFIX.OPTIONS.OBSERVE_FROM_ALL_TIP, {noUpdate = true})
     modApi:addGenerationOption(
             "holowallsounds", STRINGS.COMMBUGFIX.OPTIONS.HOLOWALLSOUNDS,
             STRINGS.COMMBUGFIX.OPTIONS.HOLOWALLSOUNDS_TIP, {
@@ -101,10 +97,7 @@ local function init(modApi)
             })
     modApi:addGenerationOption(
             "overwatchdueling", STRINGS.COMMBUGFIX.OPTIONS.OVERWATCH_DUELING,
-            STRINGS.COMMBUGFIX.OPTIONS.OVERWATCH_DUELING_TIP, {
-                noUpdate = true,
-                enabled = false,
-            })
+            STRINGS.COMMBUGFIX.OPTIONS.OVERWATCH_DUELING_TIP, {noUpdate = true, enabled = false})
 
     local dataPath = modApi:getDataPath()
     KLEIResourceMgr.MountPackage(dataPath .. "/gui.kwad", "data")
