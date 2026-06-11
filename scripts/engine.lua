@@ -2,6 +2,7 @@
 local array = include("modules/array")
 local rand = include("modules/rand")
 local simguard = include("modules/simguard")
+local util = include("modules/util")
 local simdefs = include("sim/simdefs")
 local simengine = include("sim/engine")
 
@@ -175,11 +176,51 @@ end
 -- END Pathing: moving interest fix
 -- -----
 
--- this prevents a hard crash from client side later with a traceback that's impossible to know where the event came from
+-- From SimConstructor strict.lua
+local function canDebugTrace()
+    local d = debug.getinfo(3, "S")
+    local what = d and d.what or "C"
+    if what ~= "C" then
+        return true
+    end
+end
+local function stringizeUnitFloatTxtData(evData)
+    local data = util.stringize(evData, 1)
+    if (evData.unit and evData.unit.getName) then
+        local x, y = evData.unit:getLocation()
+        data = (data .. "\nevData.unit: ID=" .. tostring(evData.unit:getID()) .. " name=" ..
+                       tostring(evData.unit:getName()) .. " x=" .. tostring(x) .. " y=" ..
+                       tostring(y))
+    end
+    return data
+end
+
+-- Asserting early on EV_UNIT_FLOAT_TXT prevents a hard crash from client side later
+-- with a traceback that's impossible to know where the event came from.
 local dispatchEvent = simengine.dispatchEvent
 simengine.dispatchEvent = function(self, evType, evData, ...)
     if evType == simdefs.EV_UNIT_FLOAT_TXT then
-        assert(evData.txt)
+        if not evData.txt then
+            local data = stringizeUnitFloatTxtData(evData)
+            local trace = canDebugTrace() and ("\n" .. debug.traceback()) or ""
+            simlog(
+                    "CBF WARNING dispatchEvent EV_UNIT_FLOAT_TXT without txt.\nevData: " .. data ..
+                            trace)
+            return -- Silently swallow the event to avoid client error later.
+        end
+        -- Same fallback behavior as vanilla viz_manager for EV_UNIT_FLOAT_TXT
+        local x0, y0 = evData.x, evData.y
+        if evData.unit and not x0 and not y0 then
+            x0, y0 = evData.unit:getLocation()
+        end
+        if not x0 or not y0 then
+            local data = stringizeUnitFloatTxtData(evData)
+            local trace = canDebugTrace() and ("\n" .. debug.traceback()) or ""
+            simlog(
+                    "CBF WARNING dispatchEvent EV_UNIT_FLOAT_TXT without location.\nevData: " ..
+                            data .. trace)
+            return -- Silently swallow the event to avoid client error later.
+        end
     end
     return dispatchEvent(self, evType, evData, ...)
 end
