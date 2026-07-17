@@ -408,6 +408,9 @@ local function lateLoad(modApi, options, params)
     for name, def in pairs(include(scriptPath .. "/propdefs").createLateDefs()) do
         modApi:addPropDef(name, def, false)
     end
+
+    local patch_prefabt = include(scriptPath .. "/patch_prefabt")
+    patch_prefabt.patchDecor()
 end
 
 return {
