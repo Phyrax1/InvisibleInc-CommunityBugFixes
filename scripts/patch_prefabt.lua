@@ -287,8 +287,97 @@ local function resetPrefabs()
     package.loaded["sim/prefabs/shared/prefabt"] = nil
 end
 
+--------------------------------------------------------------------------------------------------------------------
+
+local util = include("client_util")
+
+local function hasTag(str, tag)
+	for word in str:gmatch("%S+") do
+		if word == tag then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function addTag(str, tag)
+	return str .. " " .. tag
+end
+
+local function clearTag(str, tag)
+	local result = {}
+
+	for word in str:gmatch("%S+") do
+		if word ~= tag then
+			table.insert(result, word)
+		end
+	end
+
+	return table.concat(result, " ")
+end
+
+local function patchDecor()
+	-- this also patches vanilla world prefabs
+	for _, prefabtTable in ipairs({ mod_manager.modPrefabs, mod_manager.modWorldPrefabs }) do
+		for _, prefabt in pairs(prefabtTable) do
+			for prefabIdx, originalPrefab in ipairs(prefabt.PREFABT0) do
+				local prefab = originalPrefab
+				local copied = false
+
+				-- first, check where this prefab would burn impass
+				local impassBurns = {}
+				local burns = prefab.burn_elements
+				for i = 4, #burns, 4 do
+					local tags, mask = burns[i - 1], burns[i]
+					if hasTag(tags, "impass") and hasTag(mask, "impass") then
+						local x, y = burns[i - 3], burns[i - 2]
+						impassBurns[packCoord(x, y)] = true
+					end
+				end
+
+				-- then make sure that where it burns impass, it has -door match tags in each direction
+				-- (Spyface usually does this by default, but it is bugged when there is a wall on the opposite side of the tile)
+				local matches = prefab.match_elements
+				for i = 4, #matches, 4 do
+					local x, y = matches[i - 3], matches[i - 2]
+					local tags, mask = matches[i - 1], matches[i]
+					if
+						impassBurns[packCoord(x, y)]
+						-- only relevant for prefabs that want to match on other tiles (interior)
+						and hasTag(tags, "tile")
+						and hasTag(mask, "tile")
+					then
+						for dir = 0, 6, 2 do
+							local doorTag = "door_" .. dir
+							if not hasTag(mask, doorTag) then
+								mask = addTag(mask, doorTag)
+							end
+							tags = clearTag(tags, doorTag)
+						end
+
+						if matches[i - 1] ~= tags or matches[i] ~= mask then
+							-- copy it so the changes don't survive a content reset of the mod manager
+							if not copied then
+								prefab = util.tcopy(originalPrefab)
+								prefabt.PREFABT0[prefabIdx] = prefab
+								matches = prefab.match_elements
+								copied = true
+							end
+
+							matches[i - 1] = tags
+							matches[i] = mask
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
 return {
     resetPrefabs = resetPrefabs,
     patchEntryGuard = patchEntryGuard,
     patchBarrierLaser = patchBarrierLaser,
+	patchDecor = patchDecor,
 }
