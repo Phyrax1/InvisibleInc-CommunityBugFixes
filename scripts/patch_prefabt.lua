@@ -350,10 +350,18 @@ local function patchDecor()
 					then
 						for dir = 0, 6, 2 do
 							local doorTag = "door_" .. dir
-							if not hasTag(mask, doorTag) then
-								mask = addTag(mask, doorTag)
+							-- only if this tile isn't trying to specifically match a door for some reason (lasers)
+							if
+								not (
+									hasTag(tags, doorTag) and hasTag(mask, doorTag)
+									or hasTag(tags, "secdoor_" .. dir) and hasTag(mask, "secdoor_" .. dir)
+								)
+							then
+								if not hasTag(mask, doorTag) then
+									mask = addTag(mask, doorTag)
+								end
+								tags = clearTag(tags, doorTag)
 							end
-							tags = clearTag(tags, doorTag)
 						end
 
 						if matches[i - 1] ~= tags or matches[i] ~= mask then
