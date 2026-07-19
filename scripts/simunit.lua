@@ -115,6 +115,18 @@ rawset(
             end
         end)
 
+-- fix mission hooks not firing when spotting cell tags via hacking a camera
+local oldSetPlayerOwner = simunit.setPlayerOwner
+simunit.setPlayerOwner = function(self, player, ...)
+	local oldOwner = self._parent
+	oldSetPlayerOwner(self, player, ...)
+	if self:isValid() and oldOwner and self._parent ~= oldOwner and self._parent == player then
+		local cells = {}
+		self:getSim():getLOS():getVizCells(self:getID(), cells)
+		self:getSim():triggerEvent(simdefs.TRG_LOS_REFRESH, { seer = self, cells = cells })
+	end
+end
+
 local oldAddTag = simunit.addTag
 function simunit:addTag(tag, ...)
     if self:getUnitData().id == "data_card" and tag == "access_card_obj" then
