@@ -120,7 +120,7 @@ local oldSetPlayerOwner = simunit.setPlayerOwner
 simunit.setPlayerOwner = function(self, player, ...)
 	local oldOwner = self._parent
 	oldSetPlayerOwner(self, player, ...)
-	if self:isValid() and oldOwner and self._parent ~= oldOwner and self._parent == player then
+	if self:isValid() and oldOwner and self._parent and self._parent ~= oldOwner and self._parent == player then
 		local cells = {}
 		self:getSim():getLOS():getVizCells(self:getID(), cells)
 		self:getSim():triggerEvent(simdefs.TRG_LOS_REFRESH, { seer = self, cells = cells })
