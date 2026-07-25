@@ -21,6 +21,15 @@ local oldOnStartTurn = simplayer.onStartTurn
 
 -- Overwrite simplayer:onStartTurn. Changes at "CBF:"
 function simplayer:onStartTurn(sim, ...)
+    -- fix aiplayer cleanup coming too late (simunit.onStartTurn can call tickKO which
+    -- processes reactions before TRG_START_TURN is even triggered)
+	for _, unit in ipairs(sim:getNPC():getUnits()) do
+		if unit:getBrain() then
+			unit:getBrain():getSenses():clearIgnoredInterests()
+			unit:getBrain():getSenses():clearLostTargets()
+		end
+	end
+    
     local fixCycleTiming = cbf_util.simCheckFlag(sim, "cbf_cycletiming")
     if fixCycleTiming then
         -- CBF: Move this clause before all unit:onStartTurn calls, instead of after.
