@@ -5,6 +5,7 @@ local serverdefs = include("modules/serverdefs")
 local rand = include("modules/rand")
 local util = include("modules/util")
 local unitdefs = include("sim/unitdefs")
+local simdefs = include("sim/simdefs")
 
 local cbf_util = include(SCRIPT_PATHS.qoala_commbugfix .. "/cbf_util")
 local constants = include(SCRIPT_PATHS.qoala_commbugfix .. "/constants")
@@ -113,6 +114,34 @@ mission_scoring.DoFinishMission = function(sim, campaign, ...)
     -- -----
     -- END Detention Centers agent chance fix
     -- -----
+
+    -- -----
+	-- mid2 skip fix
+	-- -----
+
+	campaign.cbf_pendingSituation = nil
+	if flow_result == mission_scoring.ENDGAMEFLOW.CONTINUE_CAMPAIGN and campaign.campaignEvents then
+		for _, event in ipairs(campaign.campaignEvents) do
+			if
+				event.eventType == simdefs.CAMPAIGN_EVENTS.GOTO_MISSION
+				and sim:getParams().situationName == event.mission
+			then
+				local situation = {
+					prevMissionName = event.mission,
+					name = event.data.mission,
+					difficulty = sim:getParams().difficulty,
+					mapLocation = nil,
+					corpData = event.data.corp,
+				}
+				campaign.cbf_pendingSituation = situation
+				break
+			end
+		end
+	end
+
+	-- -----
+	-- END mid2 skip fix
+	-- -----
 
     return flow_result
 end
