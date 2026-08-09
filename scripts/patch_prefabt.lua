@@ -1,3 +1,5 @@
+local util = include("modules/util")
+
 local function packCoord(x, y)
     return y * 1000 + x
 end
