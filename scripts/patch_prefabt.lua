@@ -289,8 +289,6 @@ end
 
 --------------------------------------------------------------------------------------------------------------------
 
-local util = include("client_util")
-
 local function hasTag(str, tag)
 	for word in str:gmatch("%S+") do
 		if word == tag then
