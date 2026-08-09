@@ -145,6 +145,7 @@ local function init(modApi)
     include(scriptPath .. "/units/cbf_smoke_edge")
     include(scriptPath .. "/units/simdisguiseitem")
     include(scriptPath .. "/units/smoke_cloud")
+    include(scriptPath .. "/units/store")
     include(scriptPath .. "/missions/mission_util")
     include(scriptPath .. "/procgen")
 
