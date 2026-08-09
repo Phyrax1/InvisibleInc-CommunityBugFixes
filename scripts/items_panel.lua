@@ -25,11 +25,7 @@ end
 
 function loot_panel:refreshItem(widget, i, ...)
     local wasGuard = self._targetUnit:getTraits().isGuard
-	if
-		self._targetUnit:getTraits().iscorpse
-		and self._targetUnit:getTraits().unitID
-		and self._hud._game.simCore._resultTable.guards[self._targetUnit:getTraits().unitID]
-	then
+	if self._targetUnit:getTraits().cashOnHand then
 		self._targetUnit:getTraits().isGuard = true
 	end
     local res = oldLootRefreshItem(self, widget, i, ...)
