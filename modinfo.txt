@@ -1,5 +1,5 @@
 name = Community Bug Fixes
-author = qoalabear,Cyberboy2000,Hekateras,Mobbstar,pesnitor,RaXaH
+author = qoalabear,Cyberboy2000,Hekateras,Mobbstar,pesnitor,RaXaH,Phyrax
 icon = gui/icons/modicon_cbf.png
-version = 1.19.1
+version = 1.20.0
 workshop = 2151835746
