@@ -24,7 +24,12 @@ local function getCarryableItemByIndex(unit, targetUnit, i)
 end
 
 function loot_panel:refreshItem(widget, i, ...)
+    local wasGuard = self._targetUnit:getTraits().isGuard
+	if self._targetUnit:getTraits().cashOnHand then
+		self._targetUnit:getTraits().isGuard = true
+	end
     local res = oldLootRefreshItem(self, widget, i, ...)
+    self._targetUnit:getTraits().isGuard = wasGuard
 
     if res and cbf_util.simCheckFlag(self._hud._game.simCore, "cbf_ending_incognitadrop") then
         local item = getCarryableItemByIndex(self._unit, self._targetUnit, i)
