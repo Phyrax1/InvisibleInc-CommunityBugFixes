@@ -21,7 +21,7 @@ local function earlyInit(modApi)
         -- Escorts Fixed patches upvalues in mission_scoring.
         -- This needs to be done before any normal wrapping of the library.
         "Escorts Fixed", -- Items Evacutation overwrites the "escape" ability.
-        "Items Evacuation", -- AGP overwrites Senses:addInterest, line_of_sight:calculateUnitLOS.
+        "Items Evacuation", -- AGP overwrites Senses:addInterest, line_of_sight:calculateUnitLOS, aiplayer:tickBrain
         "Advanced Guard Protocol",
         -- Talkative Agents adds event handlers to mission_panel:processEvent in lateInit.
         "Talkative Agents",
@@ -74,6 +74,12 @@ local function init(modApi)
                 },
             })
     modApi:addGenerationOption(
+            "initfacing", STRINGS.COMMBUGFIX.OPTIONS.INIT_FACING,
+            STRINGS.COMMBUGFIX.OPTIONS.INIT_FACING_TIP, {noUpdate = true})
+    modApi:addGenerationOption(
+            "observefromall", STRINGS.COMMBUGFIX.OPTIONS.OBSERVE_FROM_ALL,
+            STRINGS.COMMBUGFIX.OPTIONS.OBSERVE_FROM_ALL_TIP, {noUpdate = true})
+    modApi:addGenerationOption(
             "holowallsounds", STRINGS.COMMBUGFIX.OPTIONS.HOLOWALLSOUNDS,
             STRINGS.COMMBUGFIX.OPTIONS.HOLOWALLSOUNDS_TIP, {
                 noUpdate = true,
@@ -89,6 +95,9 @@ local function init(modApi)
                     STRINGS.COMMBUGFIX.OPTIONS.HOLOWALLSOUNDS_IGNORE,
                 },
             })
+    modApi:addGenerationOption(
+            "overwatchdueling", STRINGS.COMMBUGFIX.OPTIONS.OVERWATCH_DUELING,
+            STRINGS.COMMBUGFIX.OPTIONS.OVERWATCH_DUELING_TIP, {noUpdate = true, enabled = false})
 
     local dataPath = modApi:getDataPath()
     KLEIResourceMgr.MountPackage(dataPath .. "/gui.kwad", "data")
@@ -104,6 +113,7 @@ local function init(modApi)
 
     include(scriptPath .. "/simplayer")
     include(scriptPath .. "/pcplayer")
+    include(scriptPath .. "/aiplayer")
 
     include(scriptPath .. "/hud")
     include(scriptPath .. "/hunt")
@@ -115,11 +125,13 @@ local function init(modApi)
     include(scriptPath .. "/mainframe")
     include(scriptPath .. "/mazegen")
     include(scriptPath .. "/mission_scoring")
+    include(scriptPath .. "/saveslots-dialog")
     include(scriptPath .. "/power_generator")
     include(scriptPath .. "/simactions")
     include(scriptPath .. "/simquery")
     include(scriptPath .. "/simunit")
     include(scriptPath .. "/senses")
+    include(scriptPath .. "/actions")
     include(scriptPath .. "/smokerig")
     include(scriptPath .. "/state-map-screen")
     include(scriptPath .. "/missions/mission_detention_centre")
@@ -127,8 +139,9 @@ local function init(modApi)
     include(scriptPath .. "/units/cbf_smoke_edge")
     include(scriptPath .. "/units/simdisguiseitem")
     include(scriptPath .. "/units/smoke_cloud")
+    include(scriptPath .. "/units/store")
     include(scriptPath .. "/missions/mission_util")
-	include(scriptPath .. "/procgen")
+    include(scriptPath .. "/procgen")
 
     -- Ability patches. (Abilities are NOT reloaded on load)
     include(scriptPath .. "/abilities/activate_final_console")
@@ -137,11 +150,13 @@ local function init(modApi)
     include(scriptPath .. "/abilities/disarmtrap")
     include(scriptPath .. "/abilities/escape")
     include(scriptPath .. "/abilities/jackin_root_console")
+    include(scriptPath .. "/abilities/observePath")
     include(scriptPath .. "/abilities/open_detention_cells")
     include(scriptPath .. "/abilities/open_security_boxes")
     include(scriptPath .. "/abilities/peek")
     include(scriptPath .. "/abilities/prime_emp")
     include(scriptPath .. "/abilities/scandevice")
+    include(scriptPath .. "/abilities/shootOverwatch")
 
     local fnlib = findModByName("Function Library")
     if not fnlib then
@@ -308,8 +323,17 @@ local function load(modApi, options, params, mod_options)
     if options["missiondetcenter_spawnagent"] and params then
         params.cbf_params.cbf_detention_spawnagent = options["missiondetcenter_spawnagent"].value
     end
+    if options["initfacing"] and params then
+        params.cbf_params.cbf_idle_fixinitfacing = options["initfacing"].enabled
+    end
+    if options["observefromall"] and params then
+        params.cbf_params.cbf_rebalance_observePathFromAll = options["observefromall"].enabled
+    end
     if options["holowallsounds"] and params then
         params.cbf_params.cbf_holowallsounds = options["holowallsounds"].value
+    end
+    if options["overwatchdueling"] and params then
+        params.cbf_params.cbf_rebalance_overwatchDueling = options["overwatchdueling"].enabled
     end
 
     -- -----
@@ -379,6 +403,9 @@ local function lateLoad(modApi, options, params)
     for name, def in pairs(include(scriptPath .. "/propdefs").createLateDefs()) do
         modApi:addPropDef(name, def, false)
     end
+
+    local patch_prefabt = include(scriptPath .. "/patch_prefabt")
+    patch_prefabt.patchDecor()
 end
 
 return {
