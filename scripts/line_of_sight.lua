@@ -61,3 +61,37 @@ function line_of_sight:calculateUnitLOS(start_cell, unit, ...)
 
     return cells
 end
+
+-- the simple raycast the game often uses for LOS check is not precise for unit vision
+
+-- most commonly, it doesn't reach cells that the unit can actually see when accounting for partial visibility (>= 0.45)
+
+-- but there are also rare cases where this partial visibility threshold is too high and the raycast can give a false positive (< 0.45)
+-- (this is most problematic with simquery.couldUnitSeeCell as it can cause guards to target an agent by
+-- senses:processInterestShared even though they can't see the agent)
+
+local raycast = line_of_sight.raycast
+line_of_sight.raycast = function(self, x0, y0, x1, y1, ...)
+	-- I don't think this takes any extra parameters but who knows
+	if select("#", ...) > 0 then
+		return raycast(self, x0, y0, x1, y1, ...)
+	end
+
+	if self:raycastToCell(x0, y0, x1, y1, 0, math.pi) then
+		return x1, y1
+	end
+
+	local raycastX, raycastY = raycast(self, x0, y0, x1, y1)
+
+	if raycastX == x1 and raycastY == y1 then
+		-- need to return something different than the exact position, so move a tiny distance back in the general ray direction
+		if x0 ~= x1 then
+			raycastX = x1 + (x0 < x1 and -0.001 or 0.001)
+		end
+		if y0 ~= y1 then
+			raycastY = y1 + (y0 < y1 and -0.001 or 0.001)
+		end
+	end
+
+	return raycastX, raycastY
+end
