@@ -127,7 +127,9 @@ simunit.setPlayerOwner = function(self, player, ...)
 		self:getSim():triggerEvent(simdefs.TRG_LOS_REFRESH, { seer = self, cells = cells })
 		if self:getSeenUnits() then
 			for _, unit in ipairs(util.tdupe(self:getSeenUnits())) do
-				self:getSim():triggerEvent(simdefs.TRG_UNIT_APPEARED, { seerID = self:getID(), unit = unit })
+				if self:isValid() then
+					self:getSim():triggerEvent(simdefs.TRG_UNIT_APPEARED, { seerID = self:getID(), unit = unit })
+				end
 			end
 		end
 	end
